@@ -6,6 +6,7 @@ export default {
     orders: 'Orders',
     finance: 'Finance',
     demandForecast: 'Demand Forecast',
+    restocking: 'Restocking',
     companyName: 'Catalyst Components',
     subtitle: 'Inventory Management System'
   },
@@ -302,6 +303,54 @@ export default {
     dueDate: 'Due Date',
     addTask: 'Add Task',
     noTasks: 'No tasks yet. Add your first task above!'
+  },
+
+  // Restocking
+  restocking: {
+    title: 'Restocking',
+    description: 'Get intelligent recommendations and manage inventory restocking orders',
+    budgetSection: 'Budget Setup',
+    budgetAllocation: 'Budget Allocation',
+    selectedBudget: 'Selected Budget',
+    availableBudget: 'Available Budget',
+    budgetPlaceholder: 'Set your budget',
+    budgetError: 'Please enter a budget greater than $0',
+    budgetExceeded: 'Selected items exceed the available budget',
+    getRecommendations: 'Get Recommendations',
+    recommendations: 'Recommended Items',
+    recommendationsLoaded: '{count} recommendations loaded',
+    noRecommendations: 'No recommendations available for this budget.',
+    fetchError: 'Failed to fetch recommendations',
+    recommendedItems: 'Recommended Items',
+    table: {
+      productName: 'Product Name',
+      sku: 'SKU',
+      quantity: 'Quantity',
+      unitCost: 'Unit Cost',
+      totalCost: 'Total Cost',
+      demandForecast: 'Demand Forecast'
+    },
+    totalCost: 'Total Cost',
+    demandForecast: 'Demand Forecast',
+    currentDemand: 'Current Demand',
+    forecastedDemand: 'Forecasted Demand',
+    totalRecommendedCost: 'Total Recommended Cost',
+    budgetRemaining: 'Budget Remaining',
+    orderSummary: 'Order Summary',
+    itemsToOrder: 'Items to Order',
+    orderTotal: 'Order Total',
+    expectedDelivery: 'Expected Delivery Date',
+    placeOrder: 'Place Order',
+    selectItems: 'Please select at least one item to order',
+    orderPlaced: 'Order #{orderId} placed successfully! Expected delivery in 7 days.',
+    submitError: 'Failed to submit order',
+    deliveryIn: 'Delivery in 7 days',
+    submittedRestockingOrders: 'Submitted Restocking Orders',
+    orderDate: 'Order Date',
+    itemsCount: 'Items Count',
+    expectedDeliveryDate: 'Expected Delivery Date',
+    status: 'Status',
+    noOrdersSubmitted: 'No restocking orders submitted yet'
   },
 
   // Language

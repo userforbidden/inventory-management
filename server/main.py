@@ -2,7 +2,11 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
 from pydantic import BaseModel
-from mock_data import inventory_items, orders, demand_forecasts, backlog_items, spending_summary, monthly_spending, category_spending, recent_transactions, purchase_orders
+from mock_data import inventory_items, orders, demand_forecasts, backlog_items, spending_summary, monthly_spending, category_spending, recent_transactions, purchase_orders, restocking_orders
+from datetime import datetime, timedelta
+import uuid
+import json
+import os
 
 app = FastAPI(title="Factory Inventory Management System")
 
@@ -119,6 +123,34 @@ class CreatePurchaseOrderRequest(BaseModel):
     unit_cost: float
     expected_delivery_date: str
     notes: Optional[str] = None
+
+class RestockingOrderItem(BaseModel):
+    sku: str
+    name: str
+    quantity: int
+    unit_cost: float
+    total_cost: float
+
+class RestockingOrder(BaseModel):
+    id: str
+    order_date: str
+    items: List[RestockingOrderItem]
+    total_budget_used: float
+    status: str
+    expected_delivery_date: str
+    warehouse: Optional[str] = None
+
+class RestockingRecommendation(BaseModel):
+    sku: str
+    name: str
+    current_demand: int
+    forecasted_demand: int
+    unit_cost: float
+    quantity_recommended: int
+    total_cost: float
+
+class RestockingOrderRequest(BaseModel):
+    items: List[dict]  # [{sku, quantity}, ...]
 
 # API endpoints
 @app.get("/")
@@ -303,6 +335,124 @@ def get_monthly_trends():
     result = list(months.values())
     result.sort(key=lambda x: x['month'])
     return result
+
+@app.get("/api/restocking/recommendations", response_model=List[RestockingRecommendation])
+def get_restocking_recommendations(budget: float):
+    """Get item recommendations for restocking based on budget and demand forecast"""
+    if budget <= 0:
+        return []
+
+    recommendations = []
+    remaining_budget = budget
+
+    # Sort demand forecasts by forecasted_demand DESC (highest first)
+    sorted_forecasts = sorted(demand_forecasts, key=lambda x: x.get('forecasted_demand', 0), reverse=True)
+
+    for forecast in sorted_forecasts:
+        sku = forecast.get('item_sku')
+
+        # Find inventory item with this SKU
+        inventory_item = next((item for item in inventory_items if item.get('sku') == sku), None)
+        if not inventory_item:
+            continue
+
+        unit_cost = inventory_item.get('unit_cost', 0)
+        if unit_cost <= 0:
+            continue
+
+        # Calculate how many units we can buy with remaining budget
+        quantity_available = int(remaining_budget / unit_cost)
+        if quantity_available <= 0:
+            continue
+
+        # Cap quantity at a reasonable restocking amount (don't over-recommend)
+        quantity_recommended = min(quantity_available, max(50, forecast.get('forecasted_demand', 10) * 2))
+        total_cost = quantity_recommended * unit_cost
+
+        if total_cost <= remaining_budget:
+            recommendations.append({
+                'sku': sku,
+                'name': inventory_item.get('name'),
+                'current_demand': forecast.get('current_demand', 0),
+                'forecasted_demand': forecast.get('forecasted_demand', 0),
+                'unit_cost': unit_cost,
+                'quantity_recommended': quantity_recommended,
+                'total_cost': round(total_cost, 2)
+            })
+            remaining_budget -= total_cost
+
+    return recommendations
+
+@app.get("/api/restocking-orders", response_model=List[RestockingOrder])
+def get_restocking_orders(status: Optional[str] = None):
+    """Get all restocking orders with optional status filter"""
+    result = restocking_orders
+
+    if status and status != 'all':
+        result = [order for order in result if order.get('status', '').lower() == status.lower()]
+
+    return result
+
+@app.post("/api/restocking-orders", response_model=RestockingOrder)
+def create_restocking_order(request: RestockingOrderRequest):
+    """Submit a new restocking order"""
+    if not request.items or len(request.items) == 0:
+        raise HTTPException(status_code=400, detail="Order must contain at least one item")
+
+    order_items = []
+    total_cost = 0
+
+    # Process each item in the request
+    for item_req in request.items:
+        sku = item_req.get('sku')
+        quantity = item_req.get('quantity', 0)
+
+        if not sku or quantity <= 0:
+            raise HTTPException(status_code=400, detail=f"Invalid item: {sku}")
+
+        # Find inventory item
+        inventory_item = next((item for item in inventory_items if item.get('sku') == sku), None)
+        if not inventory_item:
+            raise HTTPException(status_code=404, detail=f"Item not found: {sku}")
+
+        unit_cost = inventory_item.get('unit_cost', 0)
+        item_total = quantity * unit_cost
+        total_cost += item_total
+
+        order_items.append({
+            'sku': sku,
+            'name': inventory_item.get('name'),
+            'quantity': quantity,
+            'unit_cost': unit_cost,
+            'total_cost': round(item_total, 2)
+        })
+
+    # Create order with 7-day delivery lead time
+    order_date = datetime.now().isoformat()
+    expected_delivery = (datetime.now() + timedelta(days=7)).isoformat()
+
+    new_order = {
+        'id': str(uuid.uuid4()),
+        'order_date': order_date,
+        'items': order_items,
+        'total_budget_used': round(total_cost, 2),
+        'status': 'submitted',
+        'expected_delivery_date': expected_delivery,
+        'warehouse': None
+    }
+
+    # Save to file
+    restocking_orders.append(new_order)
+    _save_restocking_orders()
+
+    return new_order
+
+def _save_restocking_orders():
+    """Save restocking orders to JSON file"""
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    filepath = os.path.join(base_dir, 'data', 'restocking_orders.json')
+    with open(filepath, 'w') as f:
+        json.dump(restocking_orders, f, indent=2)
 
 if __name__ == "__main__":
     import uvicorn
