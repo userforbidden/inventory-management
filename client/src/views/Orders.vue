@@ -74,6 +74,39 @@
           </table>
         </div>
       </div>
+
+      <div class="card" v-if="restockingOrders.length > 0">
+        <div class="card-header">
+          <h3 class="card-title">{{ t('restocking.submittedRestockingOrders') }} ({{ restockingOrders.length }})</h3>
+        </div>
+        <div class="table-container">
+          <table class="orders-table">
+            <thead>
+              <tr>
+                <th>{{ t('restocking.orderDate') }}</th>
+                <th>{{ t('restocking.itemsCount') }}</th>
+                <th>{{ t('restocking.totalCost') }}</th>
+                <th>{{ t('restocking.expectedDeliveryDate') }}</th>
+                <th>{{ t('restocking.status') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="restockOrder in restockingOrders" :key="restockOrder.id">
+                <td>{{ formatDate(restockOrder.order_date) }}</td>
+                <td>{{ restockOrder.items.length }}</td>
+                <td><strong>{{ currencySymbol }}{{ restockOrder.total_budget_used.toLocaleString() }}</strong></td>
+                <td>{{ formatDate(restockOrder.expected_delivery_date) }}</td>
+                <td>
+                  <span class="badge info">{{ restockOrder.status }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div v-else-if="restockingOrders.length === 0 && !loading" class="card">
+        <p style="color: #64748b; text-align: center; padding: 2rem;">{{ t('restocking.noOrdersSubmitted') }}</p>
+      </div>
     </div>
   </div>
 </template>
@@ -95,6 +128,7 @@ export default {
     const loading = ref(true)
     const error = ref(null)
     const orders = ref([])
+    const restockingOrders = ref([])
 
     // Use shared filters
     const {
@@ -124,9 +158,27 @@ export default {
       }
     }
 
+    const loadRestockingOrders = async () => {
+      try {
+        const fetched = await api.getRestockingOrders()
+        restockingOrders.value = fetched.sort((a, b) => {
+          const dateA = new Date(a.order_date)
+          const dateB = new Date(b.order_date)
+          return dateB - dateA // Most recent first
+        })
+      } catch (err) {
+        console.error('Failed to load restocking orders:', err)
+      }
+    }
+
     // Watch for filter changes and reload data
     watch([selectedPeriod, selectedLocation, selectedCategory, selectedStatus], () => {
       loadOrders()
+    })
+
+    onMounted(() => {
+      loadOrders()
+      loadRestockingOrders()
     })
 
     const getOrdersByStatus = (status) => {
@@ -153,13 +205,12 @@ export default {
       })
     }
 
-    onMounted(loadOrders)
-
     return {
       t,
       loading,
       error,
       orders,
+      restockingOrders,
       getOrdersByStatus,
       getOrderStatusClass,
       formatDate,

@@ -228,6 +228,15 @@ server/
 └── data/             # JSON data files
 ```
 
+### Documentation
+
+**Inline Comments:**
+- Always document non-obvious logic changes with comments
+- Explain the WHY, not the WHAT (code shows what it does)
+- Focus on hidden constraints, subtle invariants, and workarounds
+- Keep comments short — one line when possible
+- Update comments when logic changes
+
 ### Common Pitfalls
 
 **Avoid:**

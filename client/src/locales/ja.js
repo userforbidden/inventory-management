@@ -6,6 +6,7 @@ export default {
     orders: '注文',
     finance: '財務',
     demandForecast: '需要予測',
+    restocking: '在庫補充',
     companyName: '触媒コンポーネンツ',
     subtitle: '在庫管理システム'
   },
@@ -302,6 +303,54 @@ export default {
     dueDate: '期限',
     addTask: 'タスクを追加',
     noTasks: 'タスクがありません。上記からタスクを追加してください！'
+  },
+
+  // Restocking
+  restocking: {
+    title: '在庫補充',
+    description: 'インテリジェント推奨事項を入手し、在庫補充注文を管理します',
+    budgetSection: '予算設定',
+    budgetAllocation: '予算配分',
+    selectedBudget: '選択予算',
+    availableBudget: '利用可能な予算',
+    budgetPlaceholder: '予算を設定してください',
+    budgetError: '0ドル以上の予算を入力してください',
+    budgetExceeded: '選択したアイテムが利用可能な予算を超えています',
+    getRecommendations: '推奨事項を取得',
+    recommendations: '推奨アイテム',
+    recommendationsLoaded: '{count}件の推奨事項がロードされました',
+    noRecommendations: 'この予算で利用可能な推奨事項はありません。',
+    fetchError: '推奨事項の取得に失敗しました',
+    recommendedItems: '推奨アイテム',
+    table: {
+      productName: '商品名',
+      sku: 'SKU',
+      quantity: '数量',
+      unitCost: '単価',
+      totalCost: '合計金額',
+      demandForecast: '需要予測'
+    },
+    totalCost: '合計金額',
+    demandForecast: '需要予測',
+    currentDemand: '現在の需要',
+    forecastedDemand: '予測需要',
+    totalRecommendedCost: '推奨合計金額',
+    budgetRemaining: '残予算',
+    orderSummary: '注文概要',
+    itemsToOrder: '注文アイテム数',
+    orderTotal: '注文合計',
+    expectedDelivery: '予定配送日',
+    placeOrder: '注文を発注',
+    selectItems: '注文するアイテムを選択してください',
+    orderPlaced: '注文 #{orderId} が正常に発注されました！7日以内に配送予定です。',
+    submitError: '注文の発注に失敗しました',
+    deliveryIn: '7日以内に配送',
+    submittedRestockingOrders: '発注済みの在庫補充注文',
+    orderDate: '注文日',
+    itemsCount: 'アイテム数',
+    expectedDeliveryDate: '予定納期',
+    status: 'ステータス',
+    noOrdersSubmitted: 'まだ在庫補充注文は発注されていません'
   },
 
   // Language
